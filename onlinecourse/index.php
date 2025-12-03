@@ -1,5 +1,5 @@
 ﻿<?php
-// Simple front controller / router
+
 session_start();
 
 $controllerName = isset($_GET['controller']) ? $_GET['controller'] : 'course';
