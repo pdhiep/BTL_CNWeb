@@ -1,43 +1,48 @@
-<h2>Tạo khóa học mới</h2>
+<?php include __DIR__ . '/../../layouts/header.php'; ?>
+<?php $role = 'instructor'; include __DIR__ . '/../../layouts/sidebar.php'; ?>
 
-<form method="post" action="<?php echo BASE_URL; ?>instructor/storeCourse">
-    <div>
-        <label>Tiêu đề khóa học:</label><br>
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Tạo khóa học mới</span>
+    </div>
+
+    <form method="post" action="<?php echo BASE_URL; ?>instructor/course/store" enctype="multipart/form-data">
+        <label>Tiêu đề</label>
         <input type="text" name="title" required>
-    </div>
 
-    <div>
-        <label>Mô tả:</label><br>
-        <textarea name="description" rows="5"></textarea>
-    </div>
+        <label>Mô tả</label>
+        <textarea name="description" rows="4" required></textarea>
 
-    <div>
-        <label>Danh mục (nhập ID tạm):</label><br>
-        <input type="number" name="category_id">
-        <small>Sau này admin sẽ quản lý danh mục.</small>
-    </div>
-
-    <div>
-        <label>Giá (VNĐ):</label><br>
-        <input type="number" name="price" value="0">
-    </div>
-
-    <div>
-        <label>Thời lượng (tuần):</label><br>
-        <input type="number" name="duration_weeks" value="4">
-    </div>
-
-    <div>
-        <label>Cấp độ:</label><br>
-        <select name="level">
-            <option value="Beginner">Beginner</option>
-            <option value="Intermediate">Intermediate</option>
-            <option value="Advanced">Advanced</option>
+        <label>Danh mục</label>
+        <select name="category_id" required>
+            <option value="">-- Chọn danh mục --</option>
+            <?php foreach ($categories as $cat): ?>
+                <option value="<?php echo $cat['id']; ?>"><?php echo htmlspecialchars($cat['name']); ?></option>
+            <?php endforeach; ?>
         </select>
-    </div>
 
-    <!-- upload ảnh sẽ làm ở nhiệm vụ 4 -->
+        <label>Giá (VNĐ)</label>
+        <input type="number" name="price" min="0" step="10000" required>
 
-    <button type="submit">Lưu</button>
-    <a href="<?php echo BASE_URL; ?>instructor/myCourses">Hủy</a>
-</form>
+        <label>Thời lượng (tuần)</label>
+        <input type="number" name="duration_weeks" min="1" required>
+
+        <label>Level</label>
+        <select name="level" required>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+        </select>
+
+        <label>Ảnh khóa học</label>
+        <input type="file" name="image" accept="image/*">
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a href="<?php echo BASE_URL; ?>instructor/myCourses" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+
+</main></div>
+<?php include __DIR__ . '/../../layouts/footer.php'; ?>

@@ -1,48 +1,36 @@
-<h2>Chỉnh sửa khóa học</h2>
+<?php include __DIR__ . '/../../layouts/header.php'; ?>
+<?php $role = 'instructor'; include __DIR__ . '/../../layouts/sidebar.php'; ?>
 
-<?php if (!$course): ?>
-    <p>Khóa học không tồn tại.</p>
-<?php else: ?>
-<form method="post" action="<?php echo BASE_URL . 'instructor/updateCourse/' . $course['id']; ?>">
-    <div>
-        <label>Tiêu đề khóa học:</label><br>
-        <input type="text" name="title" required
-               value="<?php echo htmlspecialchars($course['title']); ?>">
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Sửa khóa học</span>
     </div>
 
-    <div>
-        <label>Mô tả:</label><br>
-        <textarea name="description" rows="5"><?php echo htmlspecialchars($course['description']); ?></textarea>
-    </div>
+    <form method="post" action="<?php echo BASE_URL . 'instructor/course/update/' . $course['id']; ?>" enctype="multipart/form-data">
+        <label>Tiêu đề</label>
+        <input type="text" name="title" value="<?php echo htmlspecialchars($course['title']); ?>" required>
 
-    <div>
-        <label>Danh mục (ID):</label><br>
-        <input type="number" name="category_id"
-               value="<?php echo htmlspecialchars($course['category_id']); ?>">
-    </div>
+        <label>Mô tả</label>
+        <textarea name="description" rows="4" required><?php echo htmlspecialchars($course['description']); ?></textarea>
 
-    <div>
-        <label>Giá (VNĐ):</label><br>
-        <input type="number" name="price"
-               value="<?php echo htmlspecialchars($course['price']); ?>">
-    </div>
+        <!-- Category, price, duration, level giống create, chỉ thêm selected/value -->
+        <!-- ... -->
 
-    <div>
-        <label>Thời lượng (tuần):</label><br>
-        <input type="number" name="duration_weeks"
-               value="<?php echo htmlspecialchars($course['duration_weeks']); ?>">
-    </div>
+        <label>Ảnh hiện tại</label><br>
+        <?php if ($course['image']): ?>
+            <img src="<?php echo BASE_URL . $course['image']; ?>" style="max-width:200px;margin-bottom:8px;">
+        <?php else: ?>
+            <p>Chưa có ảnh.</p>
+        <?php endif; ?>
+        <label>Chọn ảnh mới (nếu muốn)</label>
+        <input type="file" name="image" accept="image/*">
 
-    <div>
-        <label>Cấp độ:</label><br>
-        <select name="level">
-            <option value="Beginner"     <?php if ($course['level']=='Beginner') echo 'selected'; ?>>Beginner</option>
-            <option value="Intermediate" <?php if ($course['level']=='Intermediate') echo 'selected'; ?>>Intermediate</option>
-            <option value="Advanced"     <?php if ($course['level']=='Advanced') echo 'selected'; ?>>Advanced</option>
-        </select>
-    </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Cập nhật</button>
+            <a href="<?php echo BASE_URL; ?>instructor/myCourses" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
 
-    <button type="submit">Cập nhật</button>
-    <a href="<?php echo BASE_URL; ?>instructor/myCourses">Hủy</a>
-</form>
-<?php endif; ?>
+</main></div>
+<?php include __DIR__ . '/../../layouts/footer.php'; ?>

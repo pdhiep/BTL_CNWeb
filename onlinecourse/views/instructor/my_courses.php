@@ -1,35 +1,42 @@
-<h2>Khóa học của tôi</h2>
+<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php $role = 'instructor'; include __DIR__ . '/../layouts/sidebar.php'; ?>
 
-<p>
-    <a href="<?php echo BASE_URL; ?>instructor/createCourse">+ Tạo khóa học mới</a>
-</p>
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Quản lý khóa học</span>
+        <a class="btn btn-primary btn-sm" href="<?php echo BASE_URL; ?>instructor/course/create">+ Tạo khóa học</a>
+    </div>
 
-<?php if (empty($courses)): ?>
-    <p>Bạn chưa có khóa học nào.</p>
-<?php else: ?>
-    <table border="1" cellpadding="5" cellspacing="0">
+    <table class="table">
+        <thead>
         <tr>
-            <th>Tiêu đề</th>
+            <th>Khóa học</th>
             <th>Danh mục</th>
-            <th>Cấp độ</th>
             <th>Giá</th>
-            <th>Thời lượng (tuần)</th>
+            <th>Học viên</th>
             <th>Hành động</th>
         </tr>
+        </thead>
+        <tbody>
         <?php foreach ($courses as $course): ?>
             <tr>
                 <td><?php echo htmlspecialchars($course['title']); ?></td>
-                <td><?php echo htmlspecialchars($course['category_name'] ?? ''); ?></td>
-                <td><?php echo htmlspecialchars($course['level']); ?></td>
-                <td><?php echo htmlspecialchars($course['price']); ?></td>
-                <td><?php echo htmlspecialchars($course['duration_weeks']); ?></td>
+                <td><?php echo htmlspecialchars($course['category_name']); ?></td>
+                <td><?php echo number_format($course['price'],0,',','.'); ?>đ</td>
+                <td><?php echo (int)$course['student_count']; ?></td>
                 <td>
-                    <a href="<?php echo BASE_URL . 'instructor/editCourse/' . $course['id']; ?>">Sửa</a> |
-                    <a href="<?php echo BASE_URL . 'instructor/deleteCourse/' . $course['id']; ?>"
-                       onclick="return confirm('Xóa khóa học này?');">Xóa</a> |
-                    <a href="<?php echo BASE_URL . 'instructor/manageLessons/' . $course['id']; ?>">Bài học</a>
+                    <a href="<?php echo BASE_URL . 'instructor/course/edit/' . $course['id']; ?>" class="btn btn-sm btn-outline">Sửa</a>
+                    <a href="<?php echo BASE_URL . 'instructor/lessons/manage/' . $course['id']; ?>" class="btn btn-sm btn-primary">Bài học</a>
+                    <a href="<?php echo BASE_URL . 'instructor/students/' . $course['id']; ?>" class="btn btn-sm btn-outline">Học viên</a>
+                    <a href="<?php echo BASE_URL . 'instructor/course/delete/' . $course['id']; ?>"
+                       onclick="return confirm('Xóa khóa học này?');"
+                       class="btn btn-sm btn-secondary">Xóa</a>
                 </td>
             </tr>
         <?php endforeach; ?>
+        </tbody>
     </table>
-<?php endif; ?>
+</div>
+
+</main></div>
+<?php include __DIR__ . '/../layouts/footer.php'; ?>
