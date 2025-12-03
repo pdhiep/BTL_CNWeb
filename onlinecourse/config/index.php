@@ -1,6 +1,4 @@
 <?php
-define('BASE_URL', '/BTTH2/onlinecourse/');
-
 session_start();
 
 require_once __DIR__ . '/config/Database.php';
