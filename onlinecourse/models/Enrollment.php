@@ -6,7 +6,7 @@ class Enrollment
 	public static function isEnrolled($userId, $courseId)
 	{
 		$pdo = db();
-		$stmt = $pdo->prepare('SELECT COUNT(*) FROM enrollments WHERE user_id = :uid AND course_id = :cid');
+		$stmt = $pdo->prepare('SELECT COUNT(*) FROM enrollments WHERE student_id = :uid AND course_id = :cid');
 		$stmt->execute(['uid' => $userId, 'cid' => $courseId]);
 		return $stmt->fetchColumn() > 0;
 	}
@@ -17,17 +17,88 @@ class Enrollment
 		if (self::isEnrolled($userId, $courseId)) {
 			return false; // already enrolled
 		}
-		$stmt = $pdo->prepare('INSERT INTO enrollments (user_id, course_id, enrolled_at) VALUES (:uid, :cid, NOW())');
+		$stmt = $pdo->prepare('INSERT INTO enrollments (student_id, course_id, enrolled_date, status, progress) VALUES (:uid, :cid, NOW(), "active", 0)');
 		return $stmt->execute(['uid' => $userId, 'cid' => $courseId]);
 	}
 
+	// Get all enrolled course IDs for a user
 	public static function getEnrolledCourseIds($userId)
 	{
 		$pdo = db();
-		$stmt = $pdo->prepare('SELECT course_id FROM enrollments WHERE user_id = :uid');
+		$stmt = $pdo->prepare('SELECT course_id FROM enrollments WHERE student_id = :uid');
 		$stmt->execute(['uid' => $userId]);
 		$rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
 		return $rows ?: [];
+	}
+
+	// Get all enrolled courses for a user with course details
+	public static function getEnrolledCourses($userId)
+	{
+		$pdo = db();
+		$stmt = $pdo->prepare('
+			SELECT c.*, e.enrolled_date, e.status as completed, u.fullname as instructor_name
+			FROM enrollments e
+			JOIN courses c ON e.course_id = c.id
+			LEFT JOIN users u ON c.instructor_id = u.id
+			WHERE e.student_id = :uid AND e.status != "dropped"
+			ORDER BY e.enrolled_date DESC
+		');
+		$stmt->execute(['uid' => $userId]);
+		return $stmt->fetchAll();
+	}
+
+	// Get single enrollment record
+	public static function getEnrollment($userId, $courseId)
+	{
+		$pdo = db();
+		$stmt = $pdo->prepare('SELECT * FROM enrollments WHERE student_id = :uid AND course_id = :cid LIMIT 1');
+		$stmt->execute(['uid' => $userId, 'cid' => $courseId]);
+		return $stmt->fetch();
+	}
+
+	// Mark enrollment as completed
+	public static function markCompleted($userId, $courseId)
+	{
+		$pdo = db();
+		$stmt = $pdo->prepare('UPDATE enrollments SET status = "completed" WHERE student_id = :uid AND course_id = :cid');
+		return $stmt->execute(['uid' => $userId, 'cid' => $courseId]);
+	}
+
+	// Get student progress for a course (count of completed lessons)
+	public static function getProgress($userId, $courseId)
+	{
+		$pdo = db();
+		// Count total lessons in the course
+		$totalStmt = $pdo->prepare('SELECT COUNT(*) FROM lessons WHERE course_id = :cid');
+		$totalStmt->execute(['cid' => $courseId]);
+		$totalLessons = $totalStmt->fetchColumn();
+
+		if ($totalLessons == 0) {
+			return ['completed' => 0, 'total' => 0, 'percentage' => 0];
+		}
+
+		// Count completed lessons (using progress from enrollments)
+		$enrollStmt = $pdo->prepare('SELECT progress FROM enrollments WHERE student_id = :uid AND course_id = :cid');
+		$enrollStmt->execute(['uid' => $userId, 'cid' => $courseId]);
+		$enrollData = $enrollStmt->fetch();
+		$completedLessons = $enrollData['progress'] ?? 0;
+
+		$percentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+
+		return [
+			'completed' => $completedLessons,
+			'total' => $totalLessons,
+			'percentage' => $percentage
+		];
+	}
+
+	// Count enrolled students in a course
+	public static function getEnrolledCount($courseId)
+	{
+		$pdo = db();
+		$stmt = $pdo->prepare('SELECT COUNT(*) FROM enrollments WHERE course_id = :cid');
+		$stmt->execute(['cid' => $courseId]);
+		return $stmt->fetchColumn();
 	}
 }
 
