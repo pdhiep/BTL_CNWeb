@@ -1,26 +1,27 @@
-<div class="auth">
-	<h2>Đăng ký</h2>
-	<form method="post" action="index.php?action=register">
-		<div>
-			<label for="name">Họ tên</label>
-			<input id="name" name="name" value="<?php echo htmlspecialchars($_SESSION['old']['name'] ?? ''); ?>" required>
-		</div>
-		<div>
-			<label for="email">Email</label>
-			<input id="email" name="email" type="email" value="<?php echo htmlspecialchars($_SESSION['old']['email'] ?? ''); ?>" required>
-		</div>
-		<div>
-			<label for="password">Mật khẩu</label>
-			<input id="password" name="password" type="password" required>
-		</div>
-		<div>
-			<label for="password_confirm">Xác nhận mật khẩu</label>
-			<input id="password_confirm" name="password_confirm" type="password" required>
-		</div>
-		<div>
-			<button type="submit">Đăng ký</button>
-		</div>
+<section class="auth-card">
+	<h1>Đăng ký tài khoản</h1>
+	<form method="post" action="index.php?controller=auth&action=register" class="auth-form">
+		<?php if (!empty($nameField)) : ?>
+		<label class="form-control">
+			<span>Họ và tên</span>
+			<input type="text" name="name" value="<?php echo htmlspecialchars($old['name'] ?? ''); ?>" required>
+		</label>
+		<?php endif; ?>
+		<label class="form-control">
+			<span>Email</span>
+			<input type="email" name="email" value="<?php echo htmlspecialchars($old['email'] ?? ''); ?>" required>
+		</label>
+		<label class="form-control">
+			<span>Mật khẩu</span>
+			<input type="password" name="password" minlength="6" required>
+		</label>
+		<label class="form-control">
+			<span>Nhập lại mật khẩu</span>
+			<input type="password" name="password_confirm" minlength="6" required>
+		</label>
+		<button type="submit" class="btn primary">Tạo tài khoản</button>
 	</form>
-	<p>Đã có tài khoản? <a href="index.php?action=login">Đăng nhập</a></p>
-</div>
-<?php unset($_SESSION['old']); ?>
+	<p class="auth-link">Đã có tài khoản?
+		<a href="index.php?controller=auth&action=login">Đăng nhập</a>
+	</p>
+</section>

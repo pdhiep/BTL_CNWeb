@@ -1,128 +1,154 @@
 <?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../config/Database.php';
 
 class User
 {
-	private $conn;
-	private $table = 'users';
-	private $columns = [];
+	private PDO $connection;
+	private string $table = 'users';
+	private array $columns = [];
 
-	public function __construct(PDO $db)
+	public function __construct()
 	{
-		$this->conn = $db;
+		$this->connection = Database::getConnection();
 	}
 
-	private function getColumns()
+	private function loadColumns(): array
 	{
-		if (empty($this->columns)) {
-			$stmt = $this->conn->query("SHOW COLUMNS FROM {$this->table}");
-			$this->columns = array_map(static fn($row) => $row['Field'], $stmt->fetchAll(PDO::FETCH_ASSOC));
+		if (!empty($this->columns)) {
+			return $this->columns;
 		}
+
+		$stmt = $this->connection->query("SHOW COLUMNS FROM {$this->table}");
+		$this->columns = array_map(static function (array $row): string {
+			return $row['Field'];
+		}, $stmt->fetchAll(PDO::FETCH_ASSOC));
+
 		return $this->columns;
 	}
 
-	public function columnExists($field)
+	private function hasColumn(string $column): bool
 	{
-		return in_array($field, $this->getColumns(), true);
+		return in_array($column, $this->loadColumns(), true);
 	}
 
-	public function getNameColumn()
+	public function getNameColumn(): ?string
 	{
-		foreach (['name', 'full_name', 'username'] as $candidate) {
-			if ($this->columnExists($candidate)) {
+		foreach (['name', 'full_name', 'fullname', 'username'] as $candidate) {
+			if ($this->hasColumn($candidate)) {
 				return $candidate;
 			}
 		}
+
 		return null;
 	}
 
-	public function create($name, $email, $passwordHash, $role = 'student')
+	public function create(string $name, string $email, string $passwordHash, string $role = 'student'): bool
 	{
 		$data = [];
-		if ($this->columnExists('email')) {
-			$data['email'] = $email;
-		}
-		if ($this->columnExists('password')) {
-			$data['password'] = $passwordHash;
-		}
-		if ($this->columnExists('role')) {
-			$data['role'] = $role;
-		}
 		$nameColumn = $this->getNameColumn();
-		if ($nameColumn && $name !== '') {
+
+		if ($nameColumn !== null && $name !== '') {
 			$data[$nameColumn] = $name;
 		}
+		if ($this->hasColumn('email')) {
+			$data['email'] = $email;
+		}
+		if ($this->hasColumn('password')) {
+			$data['password'] = $passwordHash;
+		}
+		if ($this->hasColumn('role')) {
+			$data['role'] = $role;
+		}
 
-		if (empty($data['email']) || empty($data['password'])) {
-			throw new RuntimeException('users table must contain email and password columns.');
+		if (!isset($data['email'], $data['password'])) {
+			throw new RuntimeException('Bảng users phải có cột email và password.');
 		}
 
 		$fields = array_keys($data);
-		$placeholders = array_map(static fn($field) => ':' . $field, $fields);
+		$placeholders = array_map(static fn(string $field): string => ':' . $field, $fields);
 		$params = [];
 		foreach ($data as $field => $value) {
 			$params[':' . $field] = $value;
 		}
 
-		$sql = "INSERT INTO {$this->table} (" . implode(', ', $fields) . ") VALUES (" . implode(', ', $placeholders) . ")";
-		$stmt = $this->conn->prepare($sql);
+		$sql = sprintf(
+			'INSERT INTO %s (%s) VALUES (%s)',
+			$this->table,
+			implode(', ', $fields),
+			implode(', ', $placeholders)
+		);
+
+		$stmt = $this->connection->prepare($sql);
 		return $stmt->execute($params);
 	}
 
-	public function findByEmail($email)
+	public function findByEmail(string $email): ?array
 	{
+		if (!$this->hasColumn('email')) {
+			return null;
+		}
+
 		$sql = "SELECT * FROM {$this->table} WHERE email = :email LIMIT 1";
-		$stmt = $this->conn->prepare($sql);
+		$stmt = $this->connection->prepare($sql);
 		$stmt->execute([':email' => $email]);
-		return $stmt->fetch();
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		return $result ?: null;
 	}
 
-	public function findById($id)
+	public function findById(int $id): ?array
 	{
 		$sql = "SELECT * FROM {$this->table} WHERE id = :id LIMIT 1";
-		$stmt = $this->conn->prepare($sql);
+		$stmt = $this->connection->prepare($sql);
 		$stmt->execute([':id' => $id]);
-		return $stmt->fetch();
+		$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+		return $result ?: null;
 	}
 
-	public function update($id, $fields)
+	public function update(int $id, array $fields): bool
 	{
 		$sets = [];
 		$params = [':id' => $id];
-		foreach ($fields as $k => $v) {
-			if (!$this->columnExists($k)) {
+
+		foreach ($fields as $column => $value) {
+			if (!$this->hasColumn($column)) {
 				continue;
 			}
-			$sets[] = "`$k` = :$k";
-			$params[":$k"] = $v;
+			$sets[] = sprintf('`%s` = :%s', $column, $column);
+			$params[':' . $column] = $value;
 		}
+
 		if (empty($sets)) {
 			return false;
 		}
-		$sql = "UPDATE {$this->table} SET " . implode(', ', $sets) . " WHERE id = :id";
-		$stmt = $this->conn->prepare($sql);
+
+		$sql = sprintf('UPDATE %s SET %s WHERE id = :id', $this->table, implode(', ', $sets));
+		$stmt = $this->connection->prepare($sql);
+
 		return $stmt->execute($params);
 	}
 
-	public function all()
+	public function all(): array
 	{
-		$selects = ['id'];
+		$columns = ['id'];
 		$nameColumn = $this->getNameColumn();
-		if ($nameColumn) {
-			$selects[] = "$nameColumn AS name";
-		} elseif ($this->columnExists('email')) {
-			$selects[] = "email AS name";
+		if ($nameColumn !== null) {
+			$columns[] = sprintf('%s AS name', $nameColumn);
 		}
-		if ($this->columnExists('email')) {
-			$selects[] = 'email';
+		if ($this->hasColumn('email')) {
+			$columns[] = 'email';
 		}
-		if ($this->columnExists('role')) {
-			$selects[] = 'role';
+		if ($this->hasColumn('role')) {
+			$columns[] = 'role';
 		}
-		if ($this->columnExists('created_at')) {
-			$selects[] = 'created_at';
+		if ($this->hasColumn('created_at')) {
+			$columns[] = 'created_at';
 		}
-		$sql = "SELECT " . implode(', ', $selects) . " FROM {$this->table} ORDER BY id DESC";
-		$stmt = $this->conn->query($sql);
-		return $stmt->fetchAll();
+
+		$sql = sprintf('SELECT %s FROM %s ORDER BY id DESC', implode(', ', $columns), $this->table);
+		return $this->connection->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 	}
 }
