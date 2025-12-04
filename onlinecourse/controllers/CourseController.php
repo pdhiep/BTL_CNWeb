@@ -37,7 +37,7 @@ class CourseController
 
 		// Get additional course info
 		$enrolledCount = Enrollment::getEnrolledCount($id);
-		$lessons = \Lesson::getByCourse($id);
+		$lessons = Lesson::getByCourse($id);
 		
 		$message = isset($_SESSION['flash']) ? $_SESSION['flash'] : null;
 		unset($_SESSION['flash']);

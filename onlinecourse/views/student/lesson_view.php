@@ -14,12 +14,12 @@
 	</div>
 
 	<div class="lesson-content">
-		<div class="lesson-description">
-			<h2>Nội dung bài học</h2>
-			<div class="content-text">
-				<?php echo nl2br(htmlspecialchars($lesson['description'] ?? 'Chưa có nội dung')); ?>
+			<div class="lesson-description">
+				<h2>Nội dung bài học</h2>
+				<div class="content-text">
+					<?php echo nl2br(htmlspecialchars($lesson['content'] ?? 'Chưa có nội dung')); ?>
+				</div>
 			</div>
-		</div>
 
 		<?php if (!empty($materials)): ?>
 			<div class="lesson-materials">
@@ -31,7 +31,8 @@
 						<div class="material-item">
 							<div class="material-icon">
 								<?php
-									$ext = pathinfo($material['file_name'], PATHINFO_EXTENSION);
+									// material uses `filename` column in DB
+									$ext = pathinfo($material['filename'] ?? '', PATHINFO_EXTENSION);
 									if (in_array(strtolower($ext), ['pdf'])) {
 										echo '📄';
 									} elseif (in_array(strtolower($ext), ['doc', 'docx'])) {
@@ -47,11 +48,11 @@
 							</div>
 							
 							<div class="material-info">
-								<h4><?php echo htmlspecialchars($material['title']); ?></h4>
-								<p class="material-desc"><?php echo htmlspecialchars($material['description'] ?? ''); ?></p>
+								<h4><?php echo htmlspecialchars($material['filename']); ?></h4>
+								<p class="material-desc"><?php echo htmlspecialchars($material['file_type'] ?? ''); ?></p>
 								<p class="material-meta">
-									<?php echo htmlspecialchars($material['file_name']); ?> • 
-									<?php echo date('d/m/Y', strtotime($material['created_at'])); ?>
+									<?php echo htmlspecialchars($material['filename']); ?> • 
+									<?php echo date('d/m/Y', strtotime($material['uploaded_at'] ?? ($material['created_at'] ?? 'now'))); ?>
 								</p>
 							</div>
 							

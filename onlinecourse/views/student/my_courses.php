@@ -32,8 +32,14 @@
 						<h3><?php echo htmlspecialchars($course['title']); ?></h3>
 						
 						<div class="course-meta">
+							<?php
+								$enrolledRaw = $course['enrolled_at'] ?? null;
+								$enrolledDate = $enrolledRaw ? date('d/m/Y', strtotime($enrolledRaw)) : '';
+							?>
 							<span class="instructor">👨‍🏫 <?php echo htmlspecialchars($course['instructor_name'] ?? 'Không xác định'); ?></span>
-							<span class="enrolled-date">📅 Đăng ký: <?php echo date('d/m/Y', strtotime($course['enrolled_at'])); ?></span>
+							<?php if ($enrolledDate !== ''): ?>
+								<span class="enrolled-date">📅 Đăng ký: <?php echo $enrolledDate; ?></span>
+							<?php endif; ?>
 						</div>
 						
 						<p class="course-description">
@@ -44,9 +50,18 @@
 					
 					<div class="course-status">
 						<?php if ($course['completed']): ?>
+							<?php
+								$completedRaw = $course['completed_at'] ?? null;
+								if (!$completedRaw) {
+									$completedRaw = $course['enrolled_at'] ?? null;
+								}
+								$completedDate = $completedRaw ? date('d/m/Y', strtotime($completedRaw)) : '';
+							?>
 							<div class="status-badge completed">
 								<span>✓ Hoàn thành</span>
-								<span class="date"><?php echo date('d/m/Y', strtotime($course['completed_at'] ?? $course['enrolled_at'])); ?></span>
+								<?php if ($completedDate !== ''): ?>
+									<span class="date"><?php echo $completedDate; ?></span>
+								<?php endif; ?>
 							</div>
 						<?php else: ?>
 							<div class="status-badge active">Đang học</div>

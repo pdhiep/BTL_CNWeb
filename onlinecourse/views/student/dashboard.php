@@ -35,7 +35,7 @@
 				<div class="course-card">
 					<h3><?php echo htmlspecialchars($course['title']); ?></h3>
 					<p class="course-instructor">Giáo viên: <?php echo htmlspecialchars($course['instructor_name'] ?? 'Không xác định'); ?></p>
-					<p class="course-date">Đăng ký: <?php echo date('d/m/Y', strtotime($course['enrolled_at'])); ?></p>
+					<p class="course-date">Đăng ký: <?php echo date('d/m/Y', strtotime($course['enrolled_at'] ?? date('Y-m-d'))); ?></p>
 					
 					<?php if ($course['completed']): ?>
 						<p class="status completed">✓ Đã hoàn thành</p>

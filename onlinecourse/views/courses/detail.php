@@ -58,20 +58,27 @@
 		</div>
 
 		<div class="sidebar">
-			<div class="enrollment-card">
-				<?php if ($isEnrolled): ?>
-					<div class="enrolled-status">
-						<p>✓ Bạn đã đăng ký khóa học này</p>
-						<a href="index.php?controller=student&action=courseProgress&id=<?php echo $course['id']; ?>" class="btn btn-primary btn-large">Xem tiến độ học tập</a>
-					</div>
-				<?php else: ?>
-					<form method="post" action="index.php?controller=course&action=enroll">
-						<input type="hidden" name="course_id" value="<?php echo $course['id']; ?>">
-						<button type="submit" class="btn btn-primary btn-large">Đăng ký khóa học</button>
-					</form>
-					<p class="enroll-notice">Hãy đăng ký ngay để bắt đầu học tập</p>
-				<?php endif; ?>
-			</div>
+			<?php 
+				// Only show enrollment section for students (role 0)
+				$userRole = isset($_SESSION['user_role']) ? intval($_SESSION['user_role']) : 0;
+				$canEnroll = ($userRole === 0);  // Only students can enroll
+			?>
+			<?php if ($canEnroll): ?>
+				<div class="enrollment-card">
+					<?php if ($isEnrolled): ?>
+						<div class="enrolled-status">
+							<p>✓ Bạn đã đăng ký khóa học này</p>
+							<a href="index.php?controller=student&action=courseProgress&id=<?php echo $course['id']; ?>" class="btn btn-primary btn-large">Xem tiến độ học tập</a>
+						</div>
+					<?php else: ?>
+						<form method="post" action="index.php?controller=course&action=enroll">
+							<input type="hidden" name="course_id" value="<?php echo $course['id']; ?>">
+							<button type="submit" class="btn btn-primary btn-large">Đăng ký khóa học</button>
+						</form>
+						<p class="enroll-notice">Hãy đăng ký ngay để bắt đầu học tập</p>
+					<?php endif; ?>
+				</div>
+			<?php endif; ?>
 
 			<div class="info-card">
 				<h3>Thông tin khóa học</h3>

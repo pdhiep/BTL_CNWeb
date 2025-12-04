@@ -152,8 +152,25 @@ class StudentController
 			exit;
 		}
 
-		// Serve the file
-		$filePath = __DIR__ . '/../uploads/' . $material['file_name'];
+		// Determine file path: prefer stored `file_path`, fall back to `filename` in uploads
+		$storedPath = isset($material['file_path']) && $material['file_path'] ? $material['file_path'] : null;
+		$filename = isset($material['filename']) ? $material['filename'] : null;
+
+		if ($storedPath) {
+			// If storedPath is absolute or contains uploads/, use as-is, otherwise prepend project uploads path
+			if (preg_match('#^(?:/|[A-Za-z]:\\)#', $storedPath) || strpos($storedPath, 'uploads/') === 0) {
+				$filePath = $storedPath;
+			} else {
+				$filePath = __DIR__ . '/../' . ltrim($storedPath, '/\\');
+			}
+		} elseif ($filename) {
+			$filePath = __DIR__ . '/../uploads/' . $filename;
+		} else {
+			http_response_code(404);
+			echo 'Tập tin không tìm thấy';
+			exit;
+		}
+
 		if (!file_exists($filePath)) {
 			http_response_code(404);
 			echo 'Tập tin không tìm thấy';
