@@ -6,7 +6,7 @@ require_once __DIR__ . '/../models/Material.php';
 
 class StudentController
 {
-	// Check if user is logged in (student)
+	
 	private function requireLogin()
 	{
 		if (!isset($_SESSION['user_id'])) {
@@ -16,23 +16,18 @@ class StudentController
 		}
 	}
 
-	// Student dashboard
 	public function dashboard()
 	{
 		$this->requireLogin();
 		$userId = intval($_SESSION['user_id']);
 		
-		// Get enrolled courses
 		$enrolledCourses = Enrollment::getEnrolledCourses($userId);
 		
-		// Get total stats
 		$totalEnrolled = count($enrolledCourses);
 		$completedCourses = array_sum(array_map(function($c) { return $c['completed'] ? 1 : 0; }, $enrolledCourses));
 		
 		require __DIR__ . '/../views/student/dashboard.php';
 	}
-
-	// View list of courses student is enrolled in
 	public function myCourses()
 	{
 		$this->requireLogin();
@@ -40,8 +35,6 @@ class StudentController
 		
 		$filter = isset($_GET['filter']) ? $_GET['filter'] : 'all'; // all, active, completed
 		$enrolledCourses = Enrollment::getEnrolledCourses($userId);
-		
-		// Filter courses
 		if ($filter === 'active') {
 			$enrolledCourses = array_filter($enrolledCourses, function($c) {
 				return !$c['completed'];
@@ -55,7 +48,6 @@ class StudentController
 		require __DIR__ . '/../views/student/my_courses.php';
 	}
 
-	// View course progress
 	public function courseProgress()
 	{
 		$this->requireLogin();
@@ -67,15 +59,12 @@ class StudentController
 			echo 'ID khóa học không hợp lệ';
 			exit;
 		}
-
-		// Check if student is enrolled in this course
 		if (!Enrollment::isEnrolled($userId, $courseId)) {
 			http_response_code(403);
 			echo 'Bạn chưa đăng ký khóa học này';
 			exit;
 		}
 
-		// Get course details
 		$course = Course::find($courseId);
 		if (!$course) {
 			http_response_code(404);
@@ -83,14 +72,12 @@ class StudentController
 			exit;
 		}
 
-		// Get progress data
 		$progress = Enrollment::getProgress($userId, $courseId);
 		$lessons = Lesson::getByCourse($courseId);
 		
 		require __DIR__ . '/../views/student/course_progress.php';
 	}
 
-	// View lesson
 	public function viewLesson()
 	{
 		$this->requireLogin();
@@ -102,29 +89,23 @@ class StudentController
 			echo 'ID bài học không hợp lệ';
 			exit;
 		}
-
-		// Get lesson details
 		$lesson = Lesson::findWithCourse($lessonId);
 		if (!$lesson) {
 			http_response_code(404);
 			echo 'Không tìm thấy bài học';
 			exit;
 		}
-
-		// Check if student is enrolled in the course
 		if (!Enrollment::isEnrolled($userId, $lesson['course_id'])) {
 			http_response_code(403);
 			echo 'Bạn chưa đăng ký khóa học này';
 			exit;
 		}
 
-		// Get materials for this lesson
 		$materials = Material::getByLesson($lessonId);
 		
 		require __DIR__ . '/../views/student/lesson_view.php';
 	}
 
-	// Download material
 	public function downloadMaterial()
 	{
 		$this->requireLogin();
@@ -137,27 +118,22 @@ class StudentController
 			exit;
 		}
 
-		// Get material details
 		$material = Material::findWithContext($materialId);
 		if (!$material) {
 			http_response_code(404);
 			echo 'Không tìm thấy tài liệu';
 			exit;
 		}
-
-		// Check if student is enrolled in the course
 		if (!Enrollment::isEnrolled($userId, $material['course_id'])) {
 			http_response_code(403);
 			echo 'Bạn chưa đăng ký khóa học này';
 			exit;
 		}
 
-		// Determine file path: prefer stored `file_path`, fall back to `filename` in uploads
 		$storedPath = isset($material['file_path']) && $material['file_path'] ? $material['file_path'] : null;
 		$filename = isset($material['filename']) ? $material['filename'] : null;
 
 		if ($storedPath) {
-			// If storedPath is absolute or contains uploads/, use as-is, otherwise prepend project uploads path
 			if (preg_match('#^(?:/|[A-Za-z]:\\)#', $storedPath) || strpos($storedPath, 'uploads/') === 0) {
 				$filePath = $storedPath;
 			} else {
