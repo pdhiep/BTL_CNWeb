@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/Database.php';
 
 class Material
 {
-	// Get all materials for a lesson
+	
 	public static function getByLesson($lessonId)
 	{
 		$pdo = db();
@@ -12,7 +12,7 @@ class Material
 		return $stmt->fetchAll();
 	}
 
-	// Find single material
+
 	public static function find($id)
 	{
 		$pdo = db();
@@ -21,7 +21,7 @@ class Material
 		return $stmt->fetch();
 	}
 
-	// Get material with lesson and course info
+
 	public static function findWithContext($id)
 	{
 		$pdo = db();
@@ -36,8 +36,7 @@ class Material
 		return $stmt->fetch();
 	}
 
-	// Get count of materials in lesson
-	public static function getCount($lessonId)
+		public static function getCount($lessonId)
 	{
 		$pdo = db();
 		$stmt = $pdo->prepare('SELECT COUNT(*) FROM materials WHERE lesson_id = :lid');
